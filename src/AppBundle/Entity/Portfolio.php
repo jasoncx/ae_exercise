@@ -47,7 +47,7 @@ class Portfolio
     private $user;
 
     /**
-     * @ORM\OneToMany(targetEntity="Stock", mappedBy="portfolio")
+     * @ORM\OneToMany(targetEntity="Stock", mappedBy="portfolio", cascade={"remove"})
      */
     private $stocks;
 

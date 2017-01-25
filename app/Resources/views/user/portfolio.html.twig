@@ -1,17 +1,24 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+{% if portfolio %}
+	<h1>Portfolio {{portfolio.name}}</h1>
+	<hr />
+{% endif %}
+
 {% if error %}
     <div>{{ error }}</div>
 {% endif %}
 
-{{ form_start(form) }}
-    <div class="form-group">
-        {{ form_row(form.symbol) }}
-    </div>
+{% if portfolio %}
+    {{ form_start(form) }}
+        <div class="form-group">
+            {{ form_row(form.symbol) }}
+        </div>
 
-    <button class="btn btn-primary" type="submit">Add Stock</button>
-{{ form_end(form) }}
+        <button class="btn btn-primary" type="submit">Add Stock</button>
+    {{ form_end(form) }}
+{% endif %}
 
 {% if data %}
 <hr />
@@ -19,7 +26,7 @@
 <h4>Stocks</h4>
 <ul class="list-inline">
     {% for stock in stocks %}
-        <li>{{ stock.symbol }}</li>
+        <li><a href="/remove_stock/{{ portfolio.id }}/{{ stock.id }}"<span class="glyphicon glyphicon-remove"></span></a> {{ stock.symbol }}</li>
     {% endfor %}
 </ul>
 

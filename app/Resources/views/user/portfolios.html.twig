@@ -1,6 +1,10 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
+<h1>Welcome {{ user.username }}</h1>
+
+<hr />
+
 {{ form_start(form) }}
     <div class="form-group">
         {{ form_row(form.name) }}
@@ -9,12 +13,14 @@
     <button class="btn btn-primary" type="submit">Add Portfolio</button>
 {{ form_end(form) }}
 
+{% if portfolios %}
 <hr />
 
 <h4>Portfolios</h4>
 <ul class="list-unstyled">
     {% for portfolio in portfolios %}
-        <li><a href="/portfolio/{{ portfolio.id }}">{{ portfolio.name }}</a></li>
+        <li><a href="/remove_portfolio/{{ portfolio.id }}"<span class="glyphicon glyphicon-remove"></span></a> <a href="/portfolio/{{ portfolio.id }}">{{ portfolio.name }}</a></li>
     {% endfor %}
 </ul>
+{% endif %}
 {% endblock %}

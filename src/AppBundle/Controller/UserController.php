@@ -94,11 +94,36 @@ class UserController extends Controller
             }
         }
 
+        $portfolios = $user->getPortfolios();
+
         return $this->render('user/portfolios.html.twig', array(
             'error' => $error,
             'form' => $form->createView(),
-            'portfolios' => $user->getPortfolios()
+            'user' => $user,
+            'portfolios' => count($portfolios) ? $portfolios : null
         ));
+    }
+
+    /**
+     * @Route("/remove_portfolio/{portfolio_id}", name="user_remove_portfolios")
+     */
+    public function remove_portfolio($portfolio_id)
+    {
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $portfolio = $this->getDoctrine()
+            ->getRepository('AppBundle:Portfolio')
+            ->find($portfolio_id);
+        if ($portfolio && $portfolio->getUserId() == $user->getId())
+        {
+            $portfolio_id = $portfolio->getId();
+            $em = $this->getDoctrine()->getManager();
+            $em->remove($portfolio);
+            $em->flush();
+        } else 
+        {
+            // redirect to error page
+        }
+        return $this->redirectToRoute('user_portfolios');
     }
 
     /**
@@ -113,12 +138,18 @@ class UserController extends Controller
         $portfolio = $this->getDoctrine()
             ->getRepository('AppBundle:Portfolio')
             ->find($portfolio_id);
+        // check owner
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        if (!$portfolio || $portfolio->getUserId() != $user->getId()) {
+            $error = 'Invalid portfolio';
+            $portfolio = null;
+        }
 
         $stock = new Stock();
         $form = $this->createForm(StockType::class, $stock);
 
         $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($portfolio && $form->isSubmitted() && $form->isValid()) {
             // peform symbol lookup, validate symbol
             $symbol = strtolower($stock->getSymbol());
             $url = 'http://d.yimg.com/aq/autoc?query='.urlencode($symbol).'&region=US&lang=en-US';
@@ -162,9 +193,34 @@ class UserController extends Controller
 
         return $this->render('user/portfolio.html.twig', array(
             'error' => $error,
+            'portfolio' => $portfolio,
             'form' => $form->createView(),
-            'stocks' => $portfolio->getStocks(),
-            'data' => $portfolio->getPerformanceData()
+            'stocks' => $portfolio ? $portfolio->getStocks() : null,
+            'data' => $portfolio ? $portfolio->getPerformanceData() : null
         ));
+    }
+
+    /**
+     * @Route("/remove_stock/{portfolio_id}/{stock_id}", name="user_remove_stock")
+     */
+    public function remove_stock($portfolio_id, $stock_id)
+    {
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        $portfolio = $this->getDoctrine()
+            ->getRepository('AppBundle:Portfolio')
+            ->find($portfolio_id);
+        $stock = $this->getDoctrine()
+            ->getRepository('AppBundle:Stock')
+            ->find($stock_id);
+        if ($portfolio && $stock && $portfolio->getUserId() == $user->getId() && $stock->getPortfolioId() == $portfolio->getId())
+        {
+            $em = $this->getDoctrine()->getManager();
+            $em->remove($stock);
+            $em->flush();
+        } else 
+        {
+            // redirect to error page
+        }
+        return $this->redirectToRoute('user_portfolio', array('portfolio_id' => $portfolio->getId()));
     }
 }
